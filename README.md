@@ -145,14 +145,33 @@ jimeng-service/
 
 ## 快速开始
 
-### 1. 安装依赖
+### 方式一：直接下载运行（推荐）
+
+前往 [Releases 页面](https://github.com/yangjb0913/jimeng-service/releases) 下载对应平台的压缩包，解压后直接运行：
+
+```bash
+# Windows
+jimeng-service-windows-amd64.exe
+
+# Linux
+./jimeng-service-linux-amd64
+
+# macOS
+./jimeng-service-darwin-amd64
+```
+
+运行后访问 http://localhost:8080
+
+### 方式二：从源码编译
+
+#### 1. 安装依赖
 
 ```bash
 cd jimeng-service
 go mod tidy
 ```
 
-### 2. 配置
+#### 2. 配置
 
 编辑 `config.yaml`：
 
@@ -179,7 +198,7 @@ keypool:
     image_count: 200     # 生图片默认200张
 ```
 
-### 3. 启动服务
+#### 3. 启动服务
 
 ```bash
 go run main.go
