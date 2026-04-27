@@ -1,7 +1,9 @@
 # JimengAI-Local
 
 基于火山引擎即梦AI API的本地化服务，支持生图和生视频功能，提供Web界面管理。
-
+<span style="color:red;font-size:150%;font-weight:bold;">
+  特别注意：生图用的是即梦API里的生图4.0和生图4.6（支持文生图、改图、多参考），生视频用的是即梦API里的生视频3.0和Pro3.0（相当于Seedance1.5Pro，不支持多参）。
+</span>
 ---
 
 ## 前置要求
