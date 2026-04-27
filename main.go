@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
+	"runtime"
 
 	"jimeng-service/config"
 	"jimeng-service/handlers"
@@ -128,7 +130,24 @@ func main() {
 	log.Printf("Server starting on %s", addr)
 	log.Printf("Open http://localhost:%d in your browser", cfg.Server.Port)
 
+	go openBrowser(fmt.Sprintf("http://localhost:%d", cfg.Server.Port))
+
 	if err := r.Run(addr); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
+	}
+}
+
+func openBrowser(url string) {
+	var err error
+	switch runtime.GOOS {
+	case "windows":
+		err = exec.Command("cmd", "/c", "start", url).Run()
+	case "darwin":
+		err = exec.Command("open", url).Run()
+	default:
+		err = exec.Command("xdg-open", url).Run()
+	}
+	if err != nil {
+		log.Printf("Failed to open browser: %v", err)
 	}
 }
