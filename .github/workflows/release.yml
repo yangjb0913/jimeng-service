@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact: jimeng-service-linux-amd64
+            tarball: jimeng-service-linux-amd64.tar.gz
+          - os: windows-latest
+            artifact: jimeng-service-windows-amd64.exe
+            tarball: jimeng-service-windows-amd64.zip
+          - os: macos-latest
+            artifact: jimeng-service-darwin-amd64
+            tarball: jimeng-service-darwin-amd64.tar.gz
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+
+      - name: Build
+        run: go build -ldflags="-s -w" -o ${{ matrix.artifact }} .
+
+      - name: Package Linux/macOS
+        if: matrix.os != 'windows-latest'
+        run: tar -czvf ${{ matrix.tarball }} ${{ matrix.artifact }}
+
+      - name: Package Windows
+        if: matrix.os == 'windows-latest'
+        run: Compress-Archive -Path ${{ matrix.artifact }} -DestinationPath ${{ matrix.tarball }}
+
+      - name: Upload Release Asset
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ${{ matrix.tarball }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
