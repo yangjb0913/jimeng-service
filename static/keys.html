@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>密钥管理 - 即梦AI服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔐 密钥管理</h1>
+            <nav>
+                <a href="/" class="nav-link">🏠 返回首页</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="keys-header">
+                <button id="add-key-btn" class="btn btn-primary" onclick="document.getElementById('add-key-modal').classList.add('active')">➕ 添加密钥</button>
+                <button id="import-btn" class="btn btn-secondary" onclick="document.getElementById('import-modal').classList.add('active')">📥 导入JSON</button>
+                <button id="refresh-btn" class="btn btn-secondary" onclick="loadKeys()">🔄 刷新</button>
+            </section>
+
+            <section id="keys-list" class="keys-list">
+                <p class="loading">加载中...</p>
+            </section>
+
+            <section id="quota-summary" class="quota-summary" style="display:none;">
+                <h3>配额概览</h3>
+                <div id="quota-details"></div>
+            </section>
+        </main>
+    </div>
+
+    <div id="add-key-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="this.parentElement.parentElement.classList.remove('active')">&times;</span>
+            <h2>添加密钥</h2>
+            <form id="add-key-form">
+                <div class="form-group">
+                    <label for="ak">Access Key</label>
+                    <input type="text" id="ak" name="ak" required>
+                </div>
+                <div class="form-group">
+                    <label for="sk">Secret Key</label>
+                    <input type="password" id="sk" name="sk" required>
+                </div>
+                <div class="form-group">
+                    <label for="name">密钥名称</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="weight">权重 (1-10)</label>
+                    <input type="number" id="weight" name="weight" value="10" min="1" max="10">
+                </div>
+                <button type="submit" class="btn btn-primary">添加</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="edit-key-modal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="this.parentElement.parentElement.classList.remove('active')">&times;</span>
+            <h2>编辑密钥</h2>
+            <form id="edit-key-form">
+                <input type="hidden" id="edit-key-id">
+                <div class="form-group">
+                    <label for="edit-ak">Access Key</label>
+                    <input type="text" id="edit-ak" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="edit-sk">Secret Key</label>
+                    <input type="password" id="edit-sk" readonly>
+                </div>
+                <div class="form-group">
+                    <label for="edit-name">密钥名称</label>
+                    <input type="text" id="edit-name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="edit-weight">权重 (1-10)</label>
+                    <input type="number" id="edit-weight" name="weight" min="1" max="10">
+                </div>
+                <div class="form-group">
+                    <label>视频配额 (秒)</label>
+                    <input type="number" id="edit-video-limit" min="0">
+                </div>
+                <div class="form-group">
+                    <label>图片配额 (张)</label>
+                    <input type="number" id="edit-image-limit" min="0">
+                </div>
+                <button type="submit" class="btn btn-primary">保存</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="import-modal" class="modal">
+        <div class="modal-content modal-large">
+            <span class="modal-close" onclick="this.parentElement.parentElement.classList.remove('active')">&times;</span>
+            <h2>导入密钥</h2>
+            <p>请粘贴JSON格式的密钥数据：</p>
+            <textarea id="import-data" rows="12" placeholder='{"keys": [...]}'></textarea>
+            <button id="import-submit" class="btn btn-primary">导入</button>
+        </div>
+    </div>
+
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/keys.js"></script>
+</body>
+</html>

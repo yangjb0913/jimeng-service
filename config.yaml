@@ -1,0 +1,20 @@
+server:
+  host: "0.0.0.0"
+  port: 8080
+
+jimeng:
+  api_host: "https://visual.volcengineapi.com"
+  region: "cn-north-1"
+  service: "cv"
+  version: "2022-08-31"
+
+upload:
+  path: "./uploads"
+  max_size: 15728640
+
+keypool:
+  data_file: "./keys.json"
+  create_sample: true
+  default_quotas:
+    video_seconds: 50
+    image_count: 200

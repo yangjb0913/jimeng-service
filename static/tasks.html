@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务列表 - 即梦AI服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .task-list { display: flex; flex-direction: column; gap: 16px; }
+        .task-card { background: rgba(20, 20, 40, 0.8); backdrop-filter: blur(20px); border: 1px solid rgba(0, 212, 255, 0.15); border-radius: 16px; padding: 20px; display: flex; gap: 20px; transition: all 0.3s; }
+        .task-card.failed { opacity: 0.7; border-left: 3px solid #ff5252; }
+        .task-card.done { border-left: 3px solid #00ff88; }
+        .task-card.pending, .task-card.in_queue { border-left: 3px solid #ffc107; }
+        .task-card.generating { border-left: 3px solid #00d4ff; }
+        .task-image { width: 150px; height: 150px; flex-shrink: 0; border-radius: 12px; overflow: hidden; background: rgba(0, 212, 255, 0.05); display: flex; align-items: center; justify-content: center; position: relative; border: 1px solid rgba(0, 212, 255, 0.2); }
+        .task-image img, .task-image video { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .task-image:hover img, .task-image:hover video { transform: scale(1.05); }
+        .task-image video { position: absolute; top: 0; left: 0; }
+        .task-image .preview-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; gap: 15px; opacity: 0; transition: opacity 0.3s; z-index: 10; }
+        .task-image:hover .preview-overlay { opacity: 1; }
+        .icon-btn { width: 44px; height: 44px; background: rgba(255,255,255,0.95); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; }
+        .icon-btn:hover { transform: scale(1.1); background: #00d4ff; }
+        .icon-btn svg { width: 22px; height: 22px; }
+        .task-image.placeholder { background: rgba(0, 212, 255, 0.1); color: #00d4ff; font-size: 40px; }
+        .task-details { flex: 1; display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+        .task-header { display: flex; justify-content: space-between; align-items: center; }
+        .task-type { font-weight: 600; font-size: 16px; color: #00d4ff; }
+        .task-status { padding: 5px 12px; border-radius: 20px; font-size: 12px; border: 1px solid; }
+        .task-status.done { background: rgba(0, 255, 136, 0.1); color: #00ff88; border-color: rgba(0, 255, 136, 0.3); }
+        .task-status.failed { background: rgba(255, 82, 82, 0.1); color: #ff5252; border-color: rgba(255, 82, 82, 0.3); }
+        .task-status.generating { background: rgba(0, 212, 255, 0.1); color: #00d4ff; border-color: rgba(0, 212, 255, 0.3); }
+        .task-status.pending, .task-status.in_queue { background: rgba(255, 193, 7, 0.1); color: #ffc107; border-color: rgba(255, 193, 7, 0.3); }
+        .task-prompt { color: #a0a0c0; margin: 6px 0; line-height: 1.5; font-size: 14px; word-break: break-all; white-space: pre-wrap; overflow: visible; }
+        .task-meta { font-size: 12px; color: #707090; display: flex; gap: 16px; margin-top: auto; align-items: center; }
+        .btn-delete { background: rgba(255, 82, 82, 0.2); border: 1px solid rgba(255, 82, 82, 0.4); color: #ff5252; cursor: pointer; font-size: 13px; padding: 6px 14px; border-radius: 8px; transition: all 0.2s; }
+        .btn-delete:hover { background: rgba(255, 82, 82, 0.4); transform: scale(1.05); }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 24px; }
+        .pagination button { padding: 8px 16px; border: 1px solid rgba(255, 255, 255, 0.15); background: rgba(255, 255, 255, 0.05); border-radius: 8px; cursor: pointer; color: #a0a0c0; transition: all 0.2s; }
+        .pagination button:disabled { opacity: 0.4; cursor: not-allowed; }
+        .pagination button:hover:not(:disabled) { border-color: #00d4ff; color: #00d4ff; }
+        .pagination button.active { background: rgba(0, 212, 255, 0.2); color: #00d4ff; border-color: #00d4ff; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); backdrop-filter: blur(10px); z-index: 9999; justify-content: center; align-items: center; }
+        .modal.active { display: flex; }
+        .modal img, .modal video { max-width: 85vw; max-height: 85vh; border-radius: 16px; box-shadow: 0 0 50px rgba(0, 212, 255, 0.3); }
+        .modal-close { position: absolute; top: 20px; right: 30px; color: white; font-size: 32px; cursor: pointer; background: rgba(255,255,255,0.1); width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.3s; }
+        .modal-close:hover { background: rgba(255, 82, 82, 0.3); transform: scale(1.1); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📋 任务列表</h1>
+            <nav>
+                <a href="/" class="nav-link">🏠 返回首页</a>
+                <a href="/keys.html" class="nav-link">🔐 密钥管理</a>
+            </nav>
+        </header>
+
+        <main>
+            <div class="filter-bar" style="margin-bottom: 20px; display: flex; gap: 12px; flex-wrap: wrap;">
+                <select id="filter-type" class="form-control" style="width: auto;">
+                    <option value="">全部类型</option>
+                    <option value="image">生图</option>
+                    <option value="video">生视频</option>
+                </select>
+                <select id="filter-status" class="form-control" style="width: auto;">
+                    <option value="">全部状态</option>
+                    <option value="pending">等待中</option>
+                    <option value="in_queue">排队中</option>
+                    <option value="generating">生成中</option>
+                    <option value="done">已完成</option>
+                    <option value="failed">失败</option>
+                </select>
+                <button id="refresh-btn" class="btn btn-primary">🔄 刷新</button>
+            </div>
+
+            <div id="task-list" class="task-list">
+                <p class="loading">加载中...</p>
+            </div>
+
+            <div class="pagination" id="pagination"></div>
+        </main>
+    </div>
+
+    <div class="modal" id="image-modal" onclick="if(event.target===this)closeModal()">
+        <span class="modal-close" onclick="closeModal()">×</span>
+        <img id="modal-image" src="" alt="大图预览">
+    </div>
+
+    <div class="modal" id="video-modal" onclick="if(event.target===this)closeVideoModal()">
+        <span class="modal-close" onclick="closeVideoModal()">×</span>
+        <video id="modal-video" controls autoplay style="max-width:70vw;max-height:70vh;border-radius:12px;"></video>
+    </div>
+
+    <script src="/static/js/utils.js"></script>
+    <script>
+        const PAGE_SIZE = 10;
+        let currentPage = 0;
+        let tasks = [];
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTasks();
+
+            document.getElementById('filter-type').addEventListener('change', () => loadTasks());
+            document.getElementById('filter-status').addEventListener('change', () => loadTasks());
+            document.getElementById('refresh-btn').addEventListener('click', () => loadTasks());
+
+            document.getElementById('image-modal').addEventListener('click', function(e) {
+                if (e.target === this) closeModal();
+            });
+        });
+
+        async function loadTasks() {
+            const taskList = document.getElementById('task-list');
+            taskList.innerHTML = '<p class="loading">加载中...</p>';
+
+            try {
+                const response = await fetch(`${API_BASE}/task/list?limit=100&offset=0`);
+                const data = await response.json();
+
+                if (data.code !== 0 || !data.data.tasks || data.data.tasks.length === 0) {
+                    taskList.innerHTML = '<p class="loading">暂无任务记录</p>';
+                    return;
+                }
+
+                let allTasks = data.data.tasks;
+                const typeFilter = document.getElementById('filter-type').value;
+                const statusFilter = document.getElementById('filter-status').value;
+
+                if (typeFilter) {
+                    allTasks = allTasks.filter(t => t.type === typeFilter);
+                }
+                if (statusFilter) {
+                    allTasks = allTasks.filter(t => t.status === statusFilter);
+                }
+
+                tasks = allTasks;
+                currentPage = 0;
+                renderTasks();
+                renderPagination();
+            } catch (error) {
+                console.error('Failed to load tasks:', error);
+                taskList.innerHTML = '<p class="loading">加载失败</p>';
+            }
+        }
+
+        function renderTasks() {
+            const taskList = document.getElementById('task-list');
+            const start = currentPage * PAGE_SIZE;
+            const pageTasks = tasks.slice(start, start + PAGE_SIZE);
+
+            if (pageTasks.length === 0) {
+                taskList.innerHTML = '<p class="loading">暂无任务记录</p>';
+                return;
+            }
+
+            taskList.innerHTML = pageTasks.map(task => {
+                const imageHtml = getTaskImageHtml(task);
+                const functionName = task.function === 't2i_v40' ? '文生图4.0' :
+                                    task.function === 't2i_46' ? '生图4.6' :
+                                    task.function === 't2v_720' ? '文生视频720' :
+                                    task.function === 't2v_1080' ? '文生视频1080' :
+                                    task.function === 'i2v_first_720' ? '首帧生视频720' :
+                                    task.function === 'i2v_first_1080' ? '首帧生视频1080' :
+                                    task.function === 'i2v_first_tail_720' ? '首尾帧720' :
+                                    task.function === 'i2v_first_tail_1080' ? '首尾帧1080' :
+                                    task.function === 'i2v_recamera_720' ? '运镜720' :
+                                    task.function === 'ti2v_pro' ? '图文生视频' :
+                                    task.function;
+
+                return `
+                    <div class="task-card ${task.status}">
+                        ${imageHtml}
+                        <div class="task-details">
+                            <div class="task-header">
+                                <span class="task-type">${task.type === 'image' ? '📷' : '🎬'} ${functionName}</span>
+                                <span class="task-status ${task.status}">${getStatusText(task.status)}</span>
+                            </div>
+                            <p class="task-prompt">${task.prompt || '-'}</p>
+                            <div class="task-meta">
+                                <span>创建: ${formatTime(task.created_at)}</span>
+                                ${task.completed_at ? `<span>完成: ${formatTime(task.completed_at)}</span>` : ''}
+                                ${task.error ? `<span style="color: #dc3545;">错误: ${task.error}</span>` : ''}
+                                <button class="btn-delete" onclick="deleteTask('${task.id}')">🗑️ 删除</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function getTaskImageHtml(task) {
+            if (task.status === 'failed') {
+                return `<div class="task-image placeholder">❌</div>`;
+            }
+
+            if (task.type === 'image' && task.result && task.result.image_urls && task.result.image_urls.length > 0) {
+                const url = task.result.image_urls[0];
+                return `<div class="task-image">
+                    <img src="${url}" alt="生成结果">
+                    <div class="preview-overlay">
+                        <div class="icon-btn" onclick="viewImage('${url}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                <circle cx="12" cy="12" r="3"/>
+                            </svg>
+                        </div>
+                        <div class="icon-btn" onclick="downloadImage('${url}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            if (task.type === 'video' && task.result && task.result.video_url) {
+                const url = task.result.video_url;
+                return `<div class="task-image">
+                    <video src="${url}" muted></video>
+                    <div class="preview-overlay">
+                        <div class="icon-btn" onclick="playVideo('${url}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                                <polygon points="5 3 19 12 5 21 5 3"/>
+                            </svg>
+                        </div>
+                        <div class="icon-btn" onclick="downloadVideo('${url}')">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7 10 12 15 17 10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>`;
+            }
+
+            return `<div class="task-image placeholder">⏳</div>`;
+        }
+
+        function viewImage(url) {
+            document.getElementById('modal-image').src = url;
+            document.getElementById('image-modal').classList.add('active');
+        }
+
+        function playVideo(url) {
+            document.getElementById('modal-video').src = url;
+            document.getElementById('video-modal').classList.add('active');
+        }
+
+        async function deleteTask(taskId) {
+            if (!confirm('确定要删除这个任务吗？')) return;
+            try {
+                const resp = await fetch(`${API_BASE}/task/${taskId}`, { method: 'DELETE' });
+                const data = await resp.json();
+                if (data.code === 0) {
+                    showToast('任务已删除', 'success');
+                    loadTasks();
+                } else {
+                    showToast(data.message || '删除失败', 'error');
+                }
+            } catch (err) {
+                showToast('删除失败', 'error');
+            }
+        }
+
+        function closeVideoModal() {
+            document.getElementById('modal-video').pause();
+            document.getElementById('video-modal').classList.remove('active');
+        }
+
+        function downloadImage(url) {
+            fetch(url)
+                .then(resp => resp.blob())
+                .then(blob => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `generated_image_${Date.now()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                })
+                .catch(err => console.error('Download failed:', err));
+        }
+
+        function downloadVideo(url) {
+            fetch(url)
+                .then(resp => resp.blob())
+                .then(blob => {
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = `generated_video_${Date.now()}.mp4`;
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                })
+                .catch(err => console.error('Download failed:', err));
+        }
+
+        function closeModal() {
+            document.getElementById('image-modal').classList.remove('active');
+        }
+
+        function renderPagination() {
+            const pagination = document.getElementById('pagination');
+            const totalPages = Math.ceil(tasks.length / PAGE_SIZE);
+
+            if (totalPages <= 1) {
+                pagination.innerHTML = '';
+                return;
+            }
+
+            let html = `<button onclick="goToPage(${currentPage - 1})" ${currentPage === 0 ? 'disabled' : ''}>上一页</button>`;
+
+            for (let i = 0; i < totalPages; i++) {
+                html += `<button onclick="goToPage(${i})" class="${i === currentPage ? 'active' : ''}">${i + 1}</button>`;
+            }
+
+            html += `<button onclick="goToPage(${currentPage + 1})" ${currentPage === totalPages - 1 ? 'disabled' : ''}>下一页</button>`;
+
+            pagination.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(tasks.length / PAGE_SIZE);
+            if (page < 0 || page >= totalPages) return;
+            currentPage = page;
+            renderTasks();
+            renderPagination();
+        }
+
+        function getStatusText(status) {
+            const statusMap = {
+                'pending': '等待中',
+                'in_queue': '排队中',
+                'generating': '生成中',
+                'done': '已完成',
+                'failed': '失败',
+            };
+            return statusMap[status] || status;
+        }
+
+        function formatTime(date) {
+            if (!date) return '-';
+            const d = new Date(date);
+            return d.toLocaleString('zh-CN');
+        }
+    </script>
+</body>
+</html>

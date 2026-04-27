@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>生图 - 即梦AI服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <style>
+        .image-result-item { position: relative; border-radius: 8px; overflow: hidden; }
+        .image-result-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+        .image-result-item:hover img { transform: scale(1.05); }
+        .image-result-item .preview-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; gap: 20px; opacity: 0; transition: opacity 0.3s; cursor: pointer; }
+        .image-result-item:hover .preview-overlay { opacity: 1; }
+        .icon-btn { width: 40px; height: 40px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        .icon-btn svg { width: 24px; height: 24px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📷 生图</h1>
+            <nav>
+                <a href="/" class="nav-link">🏠 返回首页</a>
+                <a href="/keys.html" class="nav-link">🔐 密钥管理</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="generator-form">
+                <div class="form-group">
+                    <label for="function-select">功能选择</label>
+                    <select id="function-select" class="form-control">
+                        <option value="t2i_v40">文生图4.0</option>
+                        <option value="t2i_46">生图4.6</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="prompt">Prompt (描述)</label>
+                    <textarea id="prompt" class="form-control" rows="4" placeholder="请输入图片描述，如：一只可爱的橘猫在阳光下打盹"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>参考图 (可选)</label>
+                    <div class="upload-area" id="upload-area">
+                        <p>拖拽图片到此处或点击上传</p>
+                        <input type="file" id="image-input" accept="image/*" multiple hidden>
+                    </div>
+                    <div id="uploaded-images" class="uploaded-images"></div>
+                    <div class="image-url-input" style="margin-top: 10px; display: flex; gap: 8px;">
+                        <input type="text" id="image-url-input" class="form-control" placeholder="或输入图片URL">
+                        <button type="button" id="add-url-btn" class="btn btn-secondary">添加</button>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="size-preset">尺寸预设</label>
+                        <select id="size-preset" class="form-control">
+                            <option value="">选择尺寸...</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="width">宽度</label>
+                        <input type="number" id="width" class="form-control" placeholder="如: 2048">
+                    </div>
+                    <div class="form-group">
+                        <label for="height">高度</label>
+                        <input type="number" id="height" class="form-control" placeholder="如: 2048">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="scale">风格强度</label>
+                    <input type="range" id="scale" min="1" max="100" value="50">
+                    <span id="scale-value">50</span>
+                </div>
+
+                <button id="generate-btn" class="btn btn-primary btn-large">🎨 开始生成</button>
+            </section>
+
+            <section id="result-section" class="result-section" style="display:none;">
+                <h3>生成结果</h3>
+                <div id="task-status" class="task-status">
+                    <div class="loading-spinner">
+                        <div class="spinner"></div>
+                        <span id="status-text">等待中...</span>
+                    </div>
+                </div>
+                <div id="image-results" class="image-results"></div>
+            </section>
+        </main>
+    </div>
+
+    <div class="modal" id="image-modal" onclick="closeModal(event)">
+        <span class="modal-close" onclick="closeModal(event)">×</span>
+        <img id="modal-image" src="" alt="大图预览">
+    </div>
+
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/image.js"></script>
+</body>
+</html>

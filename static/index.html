@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>即梦AI服务</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 即梦AI服务</h1>
+            <nav>
+                <a href="/keys.html" class="nav-link">🔐 密钥管理</a>
+                <a href="/tasks.html" class="nav-link">📋 任务列表</a>
+            </nav>
+        </header>
+
+        <main>
+            <section class="hero">
+                <h2>欢迎使用即梦AI本地服务</h2>
+                <p>支持文生图、图生图、文生视频、图生视频等多种AI生成能力</p>
+            </section>
+
+            <section class="features">
+                <div class="feature-card" onclick="location.href='/image.html'">
+                    <div class="feature-icon">📷</div>
+                    <h3>生图</h3>
+                    <p>支持4.0和4.6模型，可生成高质量图片</p>
+                    <ul>
+                        <li>文生图4.0</li>
+                        <li>生图4.6</li>
+                    </ul>
+                </div>
+
+                <div class="feature-card" onclick="location.href='/video.html'">
+                    <div class="feature-icon">🎬</div>
+                    <h3>生视频</h3>
+                    <p>支持多种视频生成模式</p>
+                    <ul>
+                        <li>文生视频</li>
+                        <li>首帧生视频</li>
+                        <li>首尾帧生视频</li>
+                        <li>运镜视频</li>
+                        <li>3.0Pro</li>
+                    </ul>
+                </div>
+            </section>
+
+            <section class="recent-tasks">
+                <h3>最近任务</h3>
+                <div id="task-list" class="task-list">
+                    <p class="loading">加载中...</p>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <p>&copy; 2026 即梦AI本地服务</p>
+        </footer>
+    </div>
+
+    <script src="/static/js/utils.js"></script>
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
