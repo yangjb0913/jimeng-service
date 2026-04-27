@@ -36,13 +36,22 @@ jobs:
       - name: Build
         run: go build -ldflags="-s -w" -o ${{ matrix.artifact }} .
 
+      - name: Create release package
+        run: |
+          mkdir -p release/${{ matrix.artifact }}
+          cp ${{ matrix.artifact }} release/${{ matrix.artifact }}/
+          cp config.yaml release/${{ matrix.artifact }}/
+          mkdir -p release/${{ matrix.artifact }}/uploads
+          echo "# JimengAI-Local" > release/${{ matrix.artifact }}/README.md
+
       - name: Package Linux/macOS
         if: matrix.os != 'windows-latest'
-        run: tar -czvf ${{ matrix.tarball }} ${{ matrix.artifact }}
+        run: tar -czvf ${{ matrix.tarball }} -C release ${{ matrix.artifact }}
 
       - name: Package Windows
         if: matrix.os == 'windows-latest'
-        run: Compress-Archive -Path ${{ matrix.artifact }} -DestinationPath ${{ matrix.tarball }}
+        shell: powershell
+        run: Compress-Archive -Path "release/${{ matrix.artifact }}" -DestinationPath ${{ matrix.tarball }}
 
       - name: Upload Release Asset
         uses: softprops/action-gh-release@v1
